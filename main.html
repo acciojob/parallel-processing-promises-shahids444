@@ -1,13 +1,82 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Downloader (Allow Partial Success)</title>
+  <style>
+    #loading {
+      display: none;
+      font-size: 18px;
+      font-weight: bold;
+      color: blue;
+    }
+    #error {
+      color: red;
+      font-weight: bold;
+    }
+    #output img {
+      max-width: 150px;
+      margin: 10px;
+      border: 2px solid #ccc;
+    }
+  </style>
+</head>
+<body>
 
-<html>
-  <head>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
+  <h2>Download Images Using Promise.allSettled</h2>
+  <button onclick="downloadImages()">Download Images</button>
+  <div id="loading">Loading images...</div>
+  <div id="error"></div>
+  <div id="output"></div>
 
-  <body>
-    <!-- the entire body must be written by student -->
-    <div id="output"></div>
-    <script type="text/javascript" src="./script.js"></script>
-  </body>
+  <script>
+    const imageUrls = [
+      'https://picsum.photos/id/237/200/300',
+      'https://picsum.photos/id/238/200/300',
+      'https://invalid-url.com/image.jpg' // invalid one
+    ];
+
+    function downloadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+      });
+    }
+
+    function downloadImages() {
+      const loadingDiv = document.getElementById('loading');
+      const errorDiv = document.getElementById('error');
+      const outputDiv = document.getElementById('output');
+
+      errorDiv.textContent = '';
+      outputDiv.innerHTML = '';
+      loadingDiv.style.display = 'block';
+
+      const promises = imageUrls.map(downloadImage);
+
+      Promise.allSettled(promises)
+        .then(results => {
+          let errorMessages = [];
+
+          results.forEach(result => {
+            if (result.status === 'fulfilled') {
+              outputDiv.appendChild(result.value);
+            } else {
+              errorMessages.push(result.reason.message);
+            }
+          });
+
+          if (errorMessages.length > 0) {
+            errorDiv.textContent = errorMessages.join('\n');
+          }
+        })
+        .finally(() => {
+          loadingDiv.style.display = 'none';
+        });
+    }
+  </script>
+
+</body>
 </html>
